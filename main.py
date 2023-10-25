@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import mail
 
 load_dotenv()
-
+print(os.getenv('REPLICATE_API_TOKEN'))
 # 파일 경로
 file_path = './result/temp.png'
 
@@ -126,7 +126,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     with gr.Row(variant='panel', scale=1):
         gr.Markdown(
         """
-        # 인공지능 교사연구회 by IASA
+        # AI 포토 메이커 by IASA
          **상업적이용시 저작권 문제가 발생할 수 있습니다. 재미로 봐주세요^^
         """)
     with gr.Tab("웹캠"):    
@@ -345,9 +345,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                             )
         with gr.Row():
             with gr.Column(scale=2):
-                receiver = gr.Text(label="받는 메일주소")
+                receiver = gr.Text(label="받는 메일주소 **공공기관 메일은 X")
             with gr.Column(scale=1):
-                btn = gr.Button("메일보내기")
+                btn = gr.Button("방금 생성한 사진 메일보내기")
             with gr.Column(scale=2):
                 txt = gr.Text(label='전송결과')
             
