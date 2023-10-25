@@ -571,9 +571,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                             )
         with gr.Row():
             with gr.Column(scale=2):
-                receiver = gr.Text(label="받는 메일주소")
+                receiver = gr.Text(label="받는 메일주소 **공공기관 메일은 X")
             with gr.Column(scale=1):
-                btn = gr.Button("메일보내기")
+                btn = gr.Button("방금 생성한 사진 메일보내기")
             with gr.Column(scale=2):
                 txt = gr.Text(label='전송결과')
             
