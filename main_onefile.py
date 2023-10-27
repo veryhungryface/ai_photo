@@ -2,7 +2,6 @@ import gradio as gr
 from PIL import Image
 import os
 from dotenv import load_dotenv
-import mail
 import base64
 import requests
 from io import BytesIO
@@ -72,12 +71,12 @@ def sendmail(receiver, my_image):
     
     # 메일 기본 정보 설정
     msg = MIMEMultipart()
-    msg["Subject"] = "PHOTO BY 인천과학예술영재학교 SW.AI 페스티벌"  # 메일 제목
+    msg["Subject"] = "PHOTO BY 2023 인천수학축전-인공지능수학"  # 메일 제목
     msg["From"] = my_account
     msg["To"] = to_mail
     
     # 메일 본문 내용
-    content = "안녕하세요. 오늘 즐거우셨나요? 오늘 생성한 사진을 보내드립니다^^ \n\n 언제나 행복하세요^^ \n\n\n --인천과학예술영재학교 AI교사연구회 드림"
+    content = "안녕하세요. 오늘 즐거우셨나요? 오늘 생성한 사진을 보내드립니다^^ \n\n 언제나 행복하세요^^ \n\n\n -- 2023 인천수학축전-인공지능수학 드림"
     content_part = MIMEText(content, "plain")
     msg.attach(content_part)
     
@@ -142,12 +141,13 @@ def swap(target_img, my_img):
     return image_array        
 
 
-def caricature(style, my_img):
+def caricature(style_type, style_degree, my_img):
 
     output = replicate.run(
         "412392713/vtoonify:54daf6387dc7c4d41ed5238e28e06277a6ee9027af5cd16486b7e0c261ba2522",
         input={"image": open(my_img, "rb"),
-               "style_degree": float(style)}
+               "style_type": style_type,
+               "style_degree": float(style_degree)}
     )
 
     # 결과이미지를 다운로드
@@ -206,8 +206,8 @@ def img2sketch_file(my_image):
 
 #gradio에서 사용할 함수
 
-def sendmail(receiver):
-    message = mail.sendmail(receiver, './result/temp.png')
+def sendmail_(receiver):
+    message = sendmail(receiver, './result/temp.png')
     print(message)
     return message 
 
@@ -254,11 +254,22 @@ def cari_gen(face):
     
     return result
 
-def cari_gen2(face, style):
+def cari_gen2(face, style_type, style_degree):
     im = Image.fromarray(face)
     im.save('./image/temp.png')
-    
-    result = caricature(style, f'./image/temp.png')
+
+    if style_type == "3d만화":
+        style_type="cartoon1"
+    elif style_type == "픽사에니메이션":
+        style_type="pixar"       
+    elif style_type == "눈코입강렬":
+        style_type="comic1-d"        
+    elif style_type == "캐리_입강조":
+        style_type="caricature1"
+    elif style_type == "캐리_상남자":
+        style_type="arcane2"
+
+    result = caricature(style_type ,style_degree, f'./image/temp.png')
     
     return result
 
@@ -306,22 +317,37 @@ EXAMPLES_album = [f"example/album_{i+1}.png" for i in range(album_files)]
 # Gradio UI
 
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
-    with gr.Row(variant='panel', scale=1):
-        gr.Markdown(
-        """
-        # AI 포토 메이커 by IASA
-         **상업적이용시 저작권 문제가 발생할 수 있습니다. 재미로 봐주세요^^
-        """)
+    with gr.Row(variant='panel'):
+        with gr.Column(variant='panel'):
+            gr.Markdown(
+            """
+            # 2023 인천수학축전
+            # 인공지능 수학 AI PHOTO 
+            **상업적이용시 저작권 문제가 발생할 수 있습니다. 재미로 봐주세요^^
+            """)
+        with gr.Column(variant='panel'):
+            with gr.Row():
+                with gr.Column():
+                    receiver = gr.Text(label="받는 메일주소 **공공기관 메일은 X")
+                with gr.Column():
+                    btn = gr.Button("방금 생성한 사진 전송")
+        with gr.Column(variant='panel'):
+                    txt = gr.Text(label='전송결과')
+                
+                    btn.click(fn=sendmail_,
+                        inputs=receiver,
+                        outputs=txt)    
+
     with gr.Tab("웹캠"):    
-        with gr.Row(variant='panel', scale=7):
+        with gr.Row(variant='panel'):
             with gr.Tab("영화포스터"):
                 with gr.Row(variant='panel'):
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -333,7 +359,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         with left_first_row:
                             gr.Interface(
                             fn=poster_gen,
-                            inputs=[gr.Image(source=method1), gr.Slider(1, len(EXAMPLES_poster), step=1, labels="포스터번호") ],
+                            inputs=[gr.Image(source=method1), gr.Slider(1, len(EXAMPLES_poster), step=1) ],
                             outputs="image",    
                             )
 
@@ -354,9 +380,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -369,7 +395,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         with left_first_row:
                             gr.Interface(
                             fn=hero_gen,
-                            inputs=[gr.Image(source=method1), gr.Slider(1, len(EXAMPLES_hero), step=1, labels="포스터번호") ],
+                            inputs=[gr.Image(source=method1), gr.Slider(1, len(EXAMPLES_hero), step=1) ],
                             outputs="image",    
                             )
 
@@ -389,9 +415,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -404,7 +430,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         with left_first_row:
                             gr.Interface(
                             fn=album_gen,
-                            inputs=[gr.Image(source=method1), gr.Slider(1, len(EXAMPLES_album), step=1, labels="쌤플번호") ],
+                            inputs=[gr.Image(source=method1), gr.Slider(1, len(EXAMPLES_album), step=1) ],
                             outputs="image",    
                             )
 
@@ -419,14 +445,14 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                                 
                             )   
                             
-            with gr.Tab("캐리커쳐1"):    
+            with gr.Tab("수채화"):    
                 with gr.Row(variant='panel'):
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -451,18 +477,18 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                                 examples=EXAMPLES_cari1,
                                 inputs=image_upload,
                                 
-                                label="캐리커처 쌤플",
+                                label="수채화 쌤플",
                                 
                             )
                     
-            with gr.Tab("캐리커쳐2"):    
+            with gr.Tab("캐리커쳐"):    
                 with gr.Row(variant='panel'):
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -475,7 +501,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         with left_first_row:
                             gr.Interface(
                             fn=cari_gen2,
-                            inputs=[gr.Image(source=method1), gr.Slider(0, 1, step=0.1, value=0.5, labels="style")],
+                            inputs=[gr.Image(source=method1), gr.Radio(["3d만화", "픽사에니메이션", "눈코입강렬" , "캐리_입강조", "캐리_상남자"], label="캐리커처Style", value="3d만화"), gr.Slider(0, 1, step=0.1, value=0.5)],
                             outputs="image",    
                             )
 
@@ -487,7 +513,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                                 examples=EXAMPLES_cari2,
                                 inputs=image_upload,
                                 
-                                label="캐리커쳐2 쌤플",
+                                label="캐리커쳐 쌤플",
                                 
                             )
                     
@@ -497,9 +523,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -526,29 +552,19 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                                 label="스케치 쌤플",
                                 
                             )
-        with gr.Row():
-            with gr.Column(scale=2):
-                receiver = gr.Text(label="받는 메일주소 **공공기관 메일은 X")
-            with gr.Column(scale=1):
-                btn = gr.Button("방금 생성한 사진 메일보내기")
-            with gr.Column(scale=2):
-                txt = gr.Text(label='전송결과')
-            
-                btn.click(fn=sendmail,
-                    inputs=receiver,
-                    outputs=txt)      
+          
             
 
     with gr.Tab("업로드"):
-        with gr.Row(variant='panel', scale=7):
+        with gr.Row(variant='panel'):
             with gr.Tab("영화포스터"):
                 with gr.Row(variant='panel'):
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -560,7 +576,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         with left_first_row:
                             gr.Interface(
                             fn=poster_gen,
-                            inputs=[gr.Image(source=method2), gr.Slider(1, len(EXAMPLES_poster), step=1, labels="포스터번호") ],
+                            inputs=[gr.Image(source=method2), gr.Slider(1, len(EXAMPLES_poster), step=1) ],
                             outputs="image",    
                             )
 
@@ -581,9 +597,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -596,7 +612,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         with left_first_row:
                             gr.Interface(
                             fn=hero_gen,
-                            inputs=[gr.Image(source=method2), gr.Slider(1, len(EXAMPLES_hero), step=1, labels="포스터번호") ],
+                            inputs=[gr.Image(source=method2), gr.Slider(1, len(EXAMPLES_hero), step=1) ],
                             outputs="image",    
                             )
 
@@ -616,9 +632,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -631,7 +647,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         with left_first_row:
                             gr.Interface(
                             fn=album_gen,
-                            inputs=[gr.Image(source=method2), gr.Slider(1, len(EXAMPLES_album), step=1, labels="쌤플번호") ],
+                            inputs=[gr.Image(source=method2), gr.Slider(1, len(EXAMPLES_album), step=1) ],
                             outputs="image",    
                             )
 
@@ -646,14 +662,14 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                                 
                             )    
                             
-            with gr.Tab("캐리커쳐1"):    
+            with gr.Tab("수채화"):    
                 with gr.Row(variant='panel'):
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -666,7 +682,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         with left_first_row:
                             gr.Interface(
                             fn=cari_gen,
-                            inputs=gr.Image(source=method2),
+                            inputs=gr.Image(source=method1),
                             outputs="image",    
                             )
 
@@ -678,18 +694,18 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                                 examples=EXAMPLES_cari1,
                                 inputs=image_upload,
                                 
-                                label="캐리커처 쌤플",
+                                label="수채화 쌤플",
                                 
                             )
                     
-            with gr.Tab("캐리커쳐2"):    
+            with gr.Tab("캐리커쳐"):    
                 with gr.Row(variant='panel'):
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -702,7 +718,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         with left_first_row:
                             gr.Interface(
                             fn=cari_gen2,
-                            inputs=[gr.Image(source=method2), gr.Slider(0, 1, step=0.1, value=0.5, labels="style")],
+                            inputs=[gr.Image(source=method1), gr.Radio(["3d만화", "픽사에니메이션", "눈코입강렬" , "캐리_입강조", "캐리_상남자"], label="캐리커처Style", value="3d만화"), gr.Slider(0, 1, step=0.1, value=0.5)],
                             outputs="image",    
                             )
 
@@ -714,7 +730,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                                 examples=EXAMPLES_cari2,
                                 inputs=image_upload,
                                 
-                                label="캐리커쳐2 쌤플",
+                                label="캐리커쳐 쌤플",
                                 
                             )
                                         
@@ -723,9 +739,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     left_column = gr.Column()
                     # right_column = gr.Column()
                     with left_column:
-                        left_first_row = gr.Row(scale=3)
+                        left_first_row = gr.Row()
                         
-                        with gr.Row(scale=1):
+                        with gr.Row():
                             image_upload = gr.Image(
                                 label="image_upload",
                                 type="pil",
@@ -752,18 +768,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                                 label="스케치 쌤플",
                                 
                             )
-        with gr.Row():
-            with gr.Column(scale=2):
-                receiver = gr.Text(label="받는 메일주소")
-            with gr.Column(scale=1):
-                btn = gr.Button("메일보내기")
-            with gr.Column(scale=2):
-                txt = gr.Text(label='전송결과')
-            
-                btn.click(fn=sendmail,
-                    inputs=receiver,
-                    outputs=txt)    
-                
+              
                     
 
-demo.launch()
+demo.launch(share=True)
