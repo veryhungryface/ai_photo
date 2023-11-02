@@ -71,12 +71,12 @@ def sendmail(receiver, my_image):
     
     # 메일 기본 정보 설정
     msg = MIMEMultipart()
-    msg["Subject"] = "PHOTO BY 2023 인천수학축전-인공지능수학"  # 메일 제목
+    msg["Subject"] = "PHOTO BY 2023 덕적초중 수학나눔 with G.O.M."  # 메일 제목
     msg["From"] = my_account
     msg["To"] = to_mail
     
     # 메일 본문 내용
-    content = "안녕하세요. 오늘 즐거우셨나요? 오늘 생성한 사진을 보내드립니다^^ \n\n 언제나 행복하세요^^ \n\n\n -- 2023 인천수학축전-인공지능수학 드림"
+    content = "안녕하세요. 오늘 즐거우셨나요? 오늘 생성한 사진을 보내드립니다^^ \n\n 언제나 행복하세요^^ \n\n\n -- 2023 인천과학예술영재학교 수학동아리 G.O.M. 드림"
     content_part = MIMEText(content, "plain")
     msg.attach(content_part)
     
@@ -222,6 +222,14 @@ def count_files(name):
             file_count += 1
     return file_count
 
+def idol_gen(face, poster_num):
+    im = Image.fromarray(face)
+    im.save('./image/temp.png')
+    
+    result = swap(f'./example/idol_{int(poster_num)}.png', f'./image/temp.png')
+    
+    return result
+
 def poster_gen(face, poster_num):
     im = Image.fromarray(face)
     im.save('./image/temp.png')
@@ -290,7 +298,7 @@ def sketch_gen(face):
     return result
 
 
-
+idol_files = count_files('idol')
 poster_files = count_files('poster')
 hero_files = count_files('hero')
 cari1_files = count_files('cari1')
@@ -305,6 +313,7 @@ album_files = count_files('album')
 # example_fns.sort()
 # examples_full = [os.path.join(example_folder, x) for x in example_fns if x.endswith('.png')]
 
+EXAMPLES_idol = [f"example/idol_{i+1}.png" for i in range(idol_files)]
 EXAMPLES_poster = [f"example/poster{i+1}.png" for i in range(poster_files)]
 EXAMPLES_hero = [f"example/hero{i+1}.png" for i in range(hero_files)]
 EXAMPLES_cari1 = [f"example/cari1_{i+1}.png" for i in range(cari1_files)]
@@ -321,8 +330,8 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
         with gr.Column(variant='panel'):
             gr.Markdown(
             """
-            # 2023 인천수학축전
-            # 인공지능 수학 AI PHOTO 
+            # 2023 인천과학예술영재학교 수학나눔
+            # 수학동아리 G.O.M. with 덕적초중
             **상업적이용시 저작권 문제가 발생할 수 있습니다. 재미로 봐주세요^^
             """)
         with gr.Column(variant='panel'):
@@ -340,6 +349,40 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
 
     with gr.Tab("웹캠"):    
         with gr.Row(variant='panel'):
+            with gr.Tab("아이돌"):
+                with gr.Row(variant='panel'):
+                    left_column = gr.Column()
+                    # right_column = gr.Column()
+                    with left_column:
+                        left_first_row = gr.Row()
+                        
+                        with gr.Row():
+                            image_upload = gr.Image(
+                                label="image_upload",
+                                type="pil",
+                                elem_id="image_upload",
+                                height=1
+                            )
+
+                    with left_column:            
+                        with left_first_row:
+                            gr.Interface(
+                            fn=idol_gen,
+                            inputs=[gr.Image(source=method1), gr.Slider(1, len(EXAMPLES_idol), step=1) ],
+                            outputs="image",    
+                            )
+
+                            # webcam_img = gr.Webcam(label="촬영")
+                            # num = gr.Slider(1, 8)     
+                            
+                with gr.Row(variant='panel'):
+                    gr.Examples(
+                                examples=EXAMPLES_idol,
+                                inputs=image_upload,
+                                
+                                label="포스터",
+                                
+                            )
             with gr.Tab("영화포스터"):
                 with gr.Row(variant='panel'):
                     left_column = gr.Column()
@@ -557,6 +600,41 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
 
     with gr.Tab("업로드"):
         with gr.Row(variant='panel'):
+            with gr.Tab("아이돌"):
+                with gr.Row(variant='panel'):
+                    left_column = gr.Column()
+                    # right_column = gr.Column()
+                    with left_column:
+                        left_first_row = gr.Row()
+                        
+                        with gr.Row():
+                            image_upload = gr.Image(
+                                label="image_upload",
+                                type="pil",
+                                elem_id="image_upload",
+                                height=1
+                            )
+
+                    with left_column:            
+                        with left_first_row:
+                            gr.Interface(
+                            fn=idol_gen,
+                            inputs=[gr.Image(source=method2), gr.Slider(1, len(EXAMPLES_idol), step=1) ],
+                            outputs="image",    
+                            )
+
+                            # webcam_img = gr.Webcam(label="촬영")
+                            # num = gr.Slider(1, 8)  
+                    
+                    with gr.Row(variant='panel'):
+                        gr.Examples(
+                                examples=EXAMPLES_idol,
+                                inputs=image_upload,
+                                
+                                label="포스터",
+                                
+                            )        
+                            
             with gr.Tab("영화포스터"):
                 with gr.Row(variant='panel'):
                     left_column = gr.Column()
